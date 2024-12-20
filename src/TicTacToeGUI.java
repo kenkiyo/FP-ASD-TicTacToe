@@ -2,7 +2,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
+import javax.sound.sampled.*;
+import java.io.File;
+import java.io.IOException;
 public class TicTacToeGUI extends JFrame {
     private static final int SIZE = 3;  // 3x3 grid
     private JButton[][] buttons;
@@ -19,6 +21,8 @@ public class TicTacToeGUI extends JFrame {
     // Player names
     private String playerXName = "Player X";
     private String playerOName = "Player O";
+
+    private boolean isVsComputer = false;  // Flag to track if it's vs computer mode
 
     public TicTacToeGUI() {
         setTitle("Tic Tac Toe");
@@ -53,6 +57,50 @@ public class TicTacToeGUI extends JFrame {
             }
         }
         add(panel, BorderLayout.CENTER);  // Add buttons to the center of the window
+
+        // Play the background music when the game starts
+        playBackgroundMusic();
+
+        // Add "VS Computer" option button
+        JPanel buttonPanel = new JPanel();
+        JButton vsComputerButton = new JButton("VS Computer");
+        vsComputerButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                isVsComputer = true;  // Set flag to true for computer mode
+                JOptionPane.showMessageDialog(TicTacToeGUI.this, "You are now playing against the computer!");
+                resetBoard();  // Reset the game board
+            }
+        });
+        buttonPanel.add(vsComputerButton);
+        add(buttonPanel, BorderLayout.SOUTH);  // Add button to the bottom of the window
+    }
+
+    // Method to play the background music
+    private void playBackgroundMusic() {
+        try {
+            // Load and play the audio file
+            File audioFile = new File("src/pop-beat-62044.wav"); // Adjust path to where the file is located
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
+            Clip clip = AudioSystem.getClip();
+            clip.open(audioStream);
+            clip.loop(Clip.LOOP_CONTINUOUSLY);  // Loop the music indefinitely
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Method to play the click sound effect
+    private void clickSound() {
+        try {
+            File clickSoundFile = new File("src/pop-94319.wav"); // Path to your click sound file
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(clickSoundFile);
+            Clip clip = AudioSystem.getClip();
+            clip.open(audioStream);
+            clip.start();  // Play the click sound
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+            e.printStackTrace();
+        }
     }
 
     // Method to prompt for player names
@@ -75,6 +123,9 @@ public class TicTacToeGUI extends JFrame {
         public void actionPerformed(ActionEvent e) {
             // Only make a move if the button is not already clicked
             if (buttons[row][col].getText().equals("")) {
+                // Play click sound effect
+                clickSound();
+
                 // Set the button's text to the current player's symbol
                 buttons[row][col].setText(currentPlayer == Seed.CROSS ? "X" : "O");
 
@@ -100,6 +151,38 @@ public class TicTacToeGUI extends JFrame {
 
                 // Switch current player
                 currentPlayer = (currentPlayer == Seed.CROSS) ? Seed.NOUGHT : Seed.CROSS;
+
+                // If it's VS Computer mode and the current player is O (Computer), make a move for the computer
+                if (isVsComputer && currentPlayer == Seed.NOUGHT) {
+                    makeComputerMove();
+                }
+            }
+        }
+    }
+
+    // Method to make a computer move
+    private void makeComputerMove() {
+        // Simple logic for computer to pick the first available spot (you can improve this)
+        for (int row = 0; row < SIZE; row++) {
+            for (int col = 0; col < SIZE; col++) {
+                if (buttons[row][col].getText().equals("")) {
+                    buttons[row][col].setText("O");
+                    currentState = board.stepGame(Seed.NOUGHT, row, col);
+
+                    // Check for game state after computer move
+                    if (currentState == State.NOUGHT_WON) {
+                        highlightWinningCells(Seed.NOUGHT);
+                        JOptionPane.showMessageDialog(TicTacToeGUI.this, playerOName + " ('O') won!");
+                        break;
+                    } else if (currentState == State.DRAW) {
+                        JOptionPane.showMessageDialog(TicTacToeGUI.this, "It's a draw!");
+                    }
+
+                    updateScore();
+                    resetBoard();
+                    currentPlayer = Seed.CROSS;  // Switch back to Player X
+                    return;
+                }
             }
         }
     }
