@@ -4,15 +4,13 @@ import java.awt.*;
 public class GameSelector extends JFrame {
 
     public GameSelector() {
-        setTitle("Choose a Game");
-        setSize(300, 200);  // Window size
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new FlowLayout());
-
         // Tampilkan pilihan game menggunakan JOptionPane
         Object[] options = {"Tic Tac Toe", "Connect Four"};
         int choice = JOptionPane.showOptionDialog(this, "Select a game to play", "Game Selector",
                 JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
+
+        // Tutup GameSelector setelah memilih game
+        this.dispose();
 
         // Periksa pilihan dan jalankan game sesuai pilihan
         if (choice == 0) {
@@ -22,9 +20,6 @@ public class GameSelector extends JFrame {
             // Pilih Connect Four
             new ConnectFourGUI().setVisible(true);
         }
-
-        // Tutup GameSelector setelah memilih game
-        this.dispose();
     }
 
     public static void main(String[] args) {

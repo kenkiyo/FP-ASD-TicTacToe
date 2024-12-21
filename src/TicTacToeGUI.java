@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 import javax.sound.sampled.*;
 import java.io.File;
 import java.io.IOException;
+
 public class TicTacToeGUI extends JFrame {
     private static final int SIZE = 3;  // 3x3 grid
     private JButton[][] buttons;
@@ -35,8 +36,8 @@ public class TicTacToeGUI extends JFrame {
         currentPlayer = Seed.CROSS;  // CROSS plays first
         currentState = State.PLAYING;  // Game is ongoing
 
-        // Prompt for player names at the start
-        promptForPlayerNames();
+        // Prompt for game mode before player names
+        promptForGameMode();
 
         // Initialize the score label and add it to the top
         scoreLabel = new JLabel(playerXName + " (X): " + crossWins + " | " + playerOName + " (O): " + noughtWins + " | Draws: " + draws);
@@ -57,56 +58,24 @@ public class TicTacToeGUI extends JFrame {
             }
         }
         add(panel, BorderLayout.CENTER);  // Add buttons to the center of the window
-
-        // Play the background music when the game starts
-        playBackgroundMusic();
-
-        // Add "VS Computer" option button
-        JPanel buttonPanel = new JPanel();
-        JButton vsComputerButton = new JButton("VS Computer");
-        vsComputerButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                isVsComputer = true;  // Set flag to true for computer mode
-                JOptionPane.showMessageDialog(TicTacToeGUI.this, "You are now playing against the computer!");
-                resetBoard();  // Reset the game board
-            }
-        });
-        buttonPanel.add(vsComputerButton);
-        add(buttonPanel, BorderLayout.SOUTH);  // Add button to the bottom of the window
     }
 
-    // Method to play the background music
-    private void playBackgroundMusic() {
-        try {
-            // Load and play the audio file
-            File audioFile = new File("src/pop-beat-62044.wav"); // Adjust path to where the file is located
-            AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
-            Clip clip = AudioSystem.getClip();
-            clip.open(audioStream);
-            clip.loop(Clip.LOOP_CONTINUOUSLY);  // Loop the music indefinitely
-        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
-            e.printStackTrace();
+    // Method to prompt for game mode
+    private void promptForGameMode() {
+        String[] options = {"Player vs Player", "Player vs Computer"};
+        int choice = JOptionPane.showOptionDialog(this, "Choose Game Mode", "Game Mode",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
+
+        if (choice == 0) {
+            // Player vs Player
+            isVsComputer = false;  // Set flag to false for player vs player mode
+        } else if (choice == 1) {
+            // Player vs Computer
+            isVsComputer = true;  // Set flag to true for computer mode
         }
-    }
 
-    // Method to play the click sound effect
-    private void clickSound() {
-        try {
-            File clickSoundFile = new File("src/pop-94319.wav"); // Path to your click sound file
-            AudioInputStream audioStream = AudioSystem.getAudioInputStream(clickSoundFile);
-            Clip clip = AudioSystem.getClip();
-            clip.open(audioStream);
-            clip.start();  // Play the click sound
-        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // Method to prompt for player names
-    private void promptForPlayerNames() {
-        playerXName = JOptionPane.showInputDialog("Enter name for Player X: ");
-        playerOName = JOptionPane.showInputDialog("Enter name for Player O: ");
+        // Prompt for player names after selecting game mode
+        promptForPlayerNames();
     }
 
     // ActionListener for handling button clicks
@@ -122,7 +91,7 @@ public class TicTacToeGUI extends JFrame {
         @Override
         public void actionPerformed(ActionEvent e) {
             // Only make a move if the button is not already clicked
-            if (buttons[row][col].getText().equals("")) {
+            if (buttons[row][col].getText().equals("") && currentState == State.PLAYING) {
                 // Play click sound effect
                 clickSound();
 
@@ -134,27 +103,27 @@ public class TicTacToeGUI extends JFrame {
 
                 // Check for game state
                 if (currentState == State.CROSS_WON) {
-                    highlightWinningCells(Seed.CROSS);  // Highlight the winning cells for X
+                    highlightWinningCells(Seed.CROSS);
                     JOptionPane.showMessageDialog(TicTacToeGUI.this, playerXName + " ('X') won!");
-                } else if (currentState == State.NOUGHT_WON) {
-                    highlightWinningCells(Seed.NOUGHT);  // Highlight the winning cells for O
-                    JOptionPane.showMessageDialog(TicTacToeGUI.this, playerOName + " ('O') won!");
-                } else if (currentState == State.DRAW) {
-                    JOptionPane.showMessageDialog(TicTacToeGUI.this, "It's a draw!");
-                }
-
-                // If the game is over, update score and reset the board
-                if (currentState != State.PLAYING) {
                     updateScore();
                     resetBoard();
-                }
+                } else if (currentState == State.NOUGHT_WON) {
+                    highlightWinningCells(Seed.NOUGHT);
+                    JOptionPane.showMessageDialog(TicTacToeGUI.this, playerOName + " ('O') won!");
+                    updateScore();
+                    resetBoard();
+                } else if (currentState == State.DRAW) {
+                    JOptionPane.showMessageDialog(TicTacToeGUI.this, "It's a draw!");
+                    updateScore();
+                    resetBoard();
+                } else {
+                    // Switch current player
+                    currentPlayer = (currentPlayer == Seed.CROSS) ? Seed.NOUGHT : Seed.CROSS;
 
-                // Switch current player
-                currentPlayer = (currentPlayer == Seed.CROSS) ? Seed.NOUGHT : Seed.CROSS;
-
-                // If it's VS Computer mode and the current player is O (Computer), make a move for the computer
-                if (isVsComputer && currentPlayer == Seed.NOUGHT) {
-                    makeComputerMove();
+                    // If it's VS Computer mode and the current player is O (Computer), make a move for the computer
+                    if (isVsComputer && currentPlayer == Seed.NOUGHT && currentState == State.PLAYING) {
+                        SwingUtilities.invokeLater(() -> makeComputerMove());  // Use invokeLater for better UI response
+                    }
                 }
             }
         }
@@ -162,10 +131,21 @@ public class TicTacToeGUI extends JFrame {
 
     // Method to make a computer move
     private void makeComputerMove() {
-        // Simple logic for computer to pick the first available spot (you can improve this)
+        // Add small delay to make computer move more natural
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // Simple logic for computer to pick the first available spot
         for (int row = 0; row < SIZE; row++) {
             for (int col = 0; col < SIZE; col++) {
                 if (buttons[row][col].getText().equals("")) {
+                    // Play sound for computer move too
+                    clickSound();
+
+                    // Update button and board
                     buttons[row][col].setText("O");
                     currentState = board.stepGame(Seed.NOUGHT, row, col);
 
@@ -173,14 +153,15 @@ public class TicTacToeGUI extends JFrame {
                     if (currentState == State.NOUGHT_WON) {
                         highlightWinningCells(Seed.NOUGHT);
                         JOptionPane.showMessageDialog(TicTacToeGUI.this, playerOName + " ('O') won!");
-                        break;
+                        updateScore();
+                        resetBoard();
                     } else if (currentState == State.DRAW) {
                         JOptionPane.showMessageDialog(TicTacToeGUI.this, "It's a draw!");
+                        updateScore();
+                        resetBoard();
+                    } else {
+                        currentPlayer = Seed.CROSS;  // Switch back to Player X
                     }
-
-                    updateScore();
-                    resetBoard();
-                    currentPlayer = Seed.CROSS;  // Switch back to Player X
                     return;
                 }
             }
@@ -220,6 +201,7 @@ public class TicTacToeGUI extends JFrame {
             for (int j = 0; j < SIZE; j++) {
                 buttons[i][j].setText("");  // Clear the text (X or O)
                 buttons[i][j].setEnabled(true);  // Re-enable the button
+                buttons[i][j].setBackground(null);  // Reset background color
             }
         }
         // Reset the board game state
@@ -228,8 +210,40 @@ public class TicTacToeGUI extends JFrame {
         currentState = State.PLAYING;  // Game is ongoing
     }
 
+    // Method to play the click sound effect
+    private void clickSound() {
+        try {
+            File clickSoundFile = new File("src/pop-94319.wav"); // Path to your click sound file
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(clickSoundFile);
+            Clip clip = AudioSystem.getClip();
+            clip.open(audioStream);
+            clip.start();  // Play the click sound
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Method to prompt for player names
+    private void promptForPlayerNames() {
+        playerXName = JOptionPane.showInputDialog("Enter name for Player X: ");
+        if (playerXName == null || playerXName.trim().isEmpty()) {
+            playerXName = "Player X";  // Default name if nothing is entered
+        }
+
+        if (!isVsComputer) {
+            playerOName = JOptionPane.showInputDialog("Enter name for Player O: ");
+            if (playerOName == null || playerOName.trim().isEmpty()) {
+                playerOName = "Player O";  // Default name if nothing is entered
+            }
+        } else {
+            playerOName = "Computer";
+        }
+    }
+
     public static void main(String[] args) {
-        TicTacToeGUI game = new TicTacToeGUI();
-        game.setVisible(true);  // Show the GUI
+        SwingUtilities.invokeLater(() -> {
+            TicTacToeGUI game = new TicTacToeGUI();
+            game.setVisible(true);  // Show the GUI
+        });
     }
 }
