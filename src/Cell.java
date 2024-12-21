@@ -1,4 +1,13 @@
 /**
+ * ES234317-Algorithm and Data Structures
+ * Semester Ganjil, 2024/2025
+ * Group Capstone Project
+ * Group #10
+ * 1 - 5026231108 - M Raihan Hassan
+ * 2 - 5026231014 - Missy Tiffaini Novlensia Sinaga
+ * 3 - 5026231026 - Azzahra Amalia Arfin
+ */
+/**
  * The Cell class models each individual cell of the TTT 3x3 grid.
  */
 public class Cell {  // save as "Cell.java"

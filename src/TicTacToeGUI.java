@@ -1,3 +1,13 @@
+/**
+ * ES234317-Algorithm and Data Structures
+ * Semester Ganjil, 2024/2025
+ * Group Capstone Project
+ * Group #10
+ * 1 - 5026231108 - M Raihan Hassan
+ * 2 - 5026231014 - Missy Tiffaini Novlensia Sinaga
+ * 3 - 5026231026 - Azzahra Amalia Arfin
+ */
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -24,6 +34,18 @@ public class TicTacToeGUI extends JFrame {
     private String playerOName = "Player O";
 
     private boolean isVsComputer = false;  // Flag to track if it's vs computer mode
+    private void playBackgroundMusic() {
+        try {
+            File bgmFile = new File("src/pop-beat-62044.wav"); // Path to your BGM file
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(bgmFile);
+            Clip clip = AudioSystem.getClip();
+            clip.open(audioStream);
+            clip.loop(Clip.LOOP_CONTINUOUSLY); // Loop the music continuously
+            clip.start(); // Start playing
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+            e.printStackTrace();
+        }
+    }
 
     public TicTacToeGUI() {
         setTitle("Tic Tac Toe");
@@ -35,6 +57,8 @@ public class TicTacToeGUI extends JFrame {
         board = new Board();  // Initialize the board
         currentPlayer = Seed.CROSS;  // CROSS plays first
         currentState = State.PLAYING;  // Game is ongoing
+
+        playBackgroundMusic();
 
         // Prompt for game mode before player names
         promptForGameMode();

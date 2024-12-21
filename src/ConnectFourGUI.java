@@ -1,7 +1,20 @@
+/**
+ * ES234317-Algorithm and Data Structures
+ * Semester Ganjil, 2024/2025
+ * Group Capstone Project
+ * Group #10
+ * 1 - 5026231108 - M Raihan Hassan
+ * 2 - 5026231014 - Missy Tiffaini Novlensia Sinaga
+ * 3 - 5026231026 - Azzahra Amalia Arfin
+ */
+
+import javax.sound.sampled.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
 
 public class ConnectFourGUI extends JFrame {
     private static final int ROWS = 6;  // Jumlah baris
@@ -11,12 +24,35 @@ public class ConnectFourGUI extends JFrame {
     private int currentPlayer;  // Pemain saat ini (1 untuk merah, 2 untuk kuning)
     private JLabel statusLabel;  // Label status permainan
 
+    private void playBackgroundMusic() {
+        try {
+            File bgmFile = new File("src/pop-beat-62044.wav"); // Path to your BGM file
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(bgmFile);
+            Clip clip = AudioSystem.getClip();
+            clip.open(audioStream);
+            clip.loop(Clip.LOOP_CONTINUOUSLY); // Loop the music continuously
+            clip.start(); // Start playing
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+            e.printStackTrace();
+        }
+    }
+    private void clickSound() {
+        try {
+            File clickSoundFile = new File("src/pop-94319.wav"); // Path to your click sound file
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(clickSoundFile);
+            Clip clip = AudioSystem.getClip();
+            clip.open(audioStream);
+            clip.start();  // Play the click sound
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+            e.printStackTrace();
+        }
+    }
     public ConnectFourGUI() {
         setTitle("Connect Four");
         setSize(700, 600);  // Ukuran jendela
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
-
+        playBackgroundMusic();
         buttons = new JButton[ROWS][COLS];
         board = new int[ROWS][COLS];
         currentPlayer = 1;  // Pemain 1 (Merah) dimulai
@@ -58,9 +94,11 @@ public class ConnectFourGUI extends JFrame {
             // Cari baris terbuka di kolom yang dipilih
             for (int i = ROWS - 1; i >= 0; i--) {
                 if (board[i][col] == 0) {
+                    clickSound();
                     board[i][col] = currentPlayer;
                     buttons[i][col].setBackground(currentPlayer == 1 ? Color.RED : Color.BLUE);
                     break;
+
                 }
             }
 
